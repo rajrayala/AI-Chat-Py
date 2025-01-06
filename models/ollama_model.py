@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from ollama import chat
-from ollama import ChatResponse, Options
+from ollama import Options
 
 load_dotenv()
 
@@ -11,14 +11,16 @@ class OllamaModel:
 
     def chat(self, config):
         options = Options(temperature=config.temperature)
-        response: ChatResponse = chat(
+        response = chat(
             model=self.model_name,
             stream=config.stream,
             options=options,
             messages=[{'role': 'user', 'content': config.user_input}],
         )
+        
+        # Streaming logic
         if config.stream:
-            for part in response:
-                yield part.message.content  # Yield each part of the response
-        else:
-            return response.message.content if response else "No response from model."
+            return (part.message.content for part in response if part.message.content)
+        
+        # Non-streaming logic
+        return response.message.content if response and response.message.content else "No response from model."

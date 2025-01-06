@@ -13,9 +13,16 @@ class GeminiModel:
     def chat(self, config):
         model = genai.GenerativeModel(self.model_name)
         generation_config = genai.GenerationConfig(temperature=config.temperature)
-        response = model.generate_content(contents=config.user_input, stream=config.stream, generation_config=generation_config)
+
+        response = model.generate_content(
+            contents=config.user_input, 
+            stream=config.stream, 
+            generation_config=generation_config
+        )
+
+        # Streaming logic
         if config.stream:
-            for chunk in response:
-                yield chunk.text  # Yield each part of the response
-        else:
-            return response.text if response else "No response from model."
+            return (chunk.text for chunk in response if chunk.text)
+        
+        # Non-streaming logic
+        return response.text if response and response.text else "No response from Gemini model."
